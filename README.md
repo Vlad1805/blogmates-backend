@@ -2,6 +2,15 @@
 
 This document provides an overview of all available API endpoints for managing blog entries, friend requests, followers, and following.
 
+## Table of Contents
+- [Authentication](#authentication)
+- [Blog Entry Endpoints](#blog-entry-endpoints)
+- [Friend Request Endpoints](#friend-request-endpoints)
+- [Follower/Following Endpoints](#followerfollowing-endpoints)
+- [Visibility Levels for Blog Entries](#visibility-levels-for-blog-entries)
+- [Notes](#notes)
+- [Local Development Guide](#local-development-guide)
+
 ## Authentication
 
 ### 1. Obtain JWT Tokens
@@ -102,4 +111,48 @@ Blog entries can have the following visibility levels:
   ```
   Authorization: Bearer <access_token>
   ```
+
+## Local Development Guide
+
+### 1. Create and Activate Virtual Environment
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 2. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Start the Development Server
+```bash
+python manage.py runserver
+```
+
+### 4. Create and Apply Migrations
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### 5. Create a Superuser (Admin Account)
+```bash
+python manage.py createsuperuser
+```
+
+### 6. Access Django Shell
+```bash
+python manage.py shell
+```
+
+### 7. Check for Installed Apps and Settings
+```bash
+python manage.py check
+```
+
+### 8. Deactivate Virtual Environment
+```bash
+deactivate
+```
 
