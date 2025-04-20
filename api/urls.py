@@ -14,11 +14,14 @@ from .views.social_views import (
 
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from .views.views import CookieTokenRefreshView, CookieTokenObtainPairView, LogoutView, CurrentUserView, UserProfileView
+
 urlpatterns = [
     path('', sanity),
     path('api/signup/', SignupAPIView.as_view(), name='signup'),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/', CookieTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', CookieTokenRefreshView.as_view(), name='token_refresh'),
+    path('api/logout/', LogoutView.as_view(), name='logout'),
     path('api/blog/', BlogEntryAPIView.as_view(), name='blog'),
     path('api/blog/<id>/', BlogEntryQueryAPIView.as_view(), name='blog-query'),
     path('api/friend-requests/send/', SendFriendRequestAPIView.as_view(), name='send-friend-request'),
@@ -29,4 +32,6 @@ urlpatterns = [
     path('api/following/', GetFollowingAPIView.as_view(), name='get-following'),
     path('api/unfollow/<int:user_id>/', UnfollowUserAPIView.as_view(), name='unfollow-user'),
     path('api/remove-follower/<int:user_id>/', RemoveFollowerAPIView.as_view(), name='remove-follower'),
+    path("api/user/", CurrentUserView.as_view(), name="current-user"),
+    path("api/profile/<int:user_id>/", UserProfileView.as_view(), name="user-profile"),
 ]
