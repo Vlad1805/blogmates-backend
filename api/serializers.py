@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import BlogEntry, UserProfile
+import base64
 
 class SignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
@@ -14,9 +15,14 @@ class SignupSerializer(serializers.ModelSerializer):
         if data['password'] != data['password2']:
             raise serializers.ValidationError("Passwords do not match.")
         return data
+
     def create(self, validated_data):
         validated_data.pop('password2')  # Remove the extra password field
         user = User.objects.create_user(**validated_data)
+        
+        # Create a UserProfile for the new user
+        UserProfile.objects.create(user=user)
+        
         return user
 
 class BlogEntrySerializer(serializers.ModelSerializer):
@@ -31,11 +37,14 @@ class BlogEntrySerializer(serializers.ModelSerializer):
         # Assign the logged-in user as the author
         validated_data['author'] = self.context['request'].user
         return super().create(validated_data)
+
 class UserProfileSerializer(serializers.ModelSerializer):
     # Include fields from the User model
     id = serializers.IntegerField(source='user.id')
     username = serializers.CharField(source='user.username')
     email = serializers.EmailField(source='user.email')
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
     
     # Follower and Following counts (using properties you added to the User model)
     follower_count = serializers.SerializerMethodField()
@@ -43,7 +52,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'username', 'email', 'profile_picture', 'follower_count', 'following_count']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_picture', 'profile_picture_content_type', 'follower_count', 'following_count']
 
     def get_follower_count(self, obj):
         # Use the 'followers' property added to the User model to get the count
@@ -52,4 +61,23 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_following_count(self, obj):
         # Use the 'following' property added to the User model to get the count
         return obj.user.following.count()
+
+    def to_representation(self, instance):
+        """Convert the binary image data to base64 for JSON serialization."""
+        ret = super().to_representation(instance)
+        if instance.profile_picture:
+            ret['profile_picture'] = base64.b64encode(instance.profile_picture).decode('utf-8')
+        return ret
+
+    def to_internal_value(self, data):
+        """Convert image data to binary for storage."""
+        ret = super().to_internal_value(data)
+        if 'profile_picture' in data:
+            profile_picture = data['profile_picture']
+            if hasattr(profile_picture, 'read'):  # It's a file upload
+                ret['profile_picture'] = profile_picture.read()
+            else:  # It's a base64 string
+                ret['profile_picture'] = base64.b64decode(profile_picture)
+            ret['profile_picture_content_type'] = data.get('profile_picture_content_type', 'image/jpeg')
+        return ret
 

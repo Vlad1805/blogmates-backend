@@ -4,6 +4,7 @@ This document provides an overview of all available API endpoints for managing b
 
 ## Table of Contents
 - [Authentication](#authentication)
+- [User Profile Endpoints](#user-profile-endpoints)
 - [Blog Entry Endpoints](#blog-entry-endpoints)
 - [Friend Request Endpoints](#friend-request-endpoints)
 - [Follower/Following Endpoints](#followerfollowing-endpoints)
@@ -32,6 +33,72 @@ This document provides an overview of all available API endpoints for managing b
     "refresh": "<refresh_token>"
 }
 ```
+
+## User Profile Endpoints
+
+### 1. Get User Profile
+**Endpoint:** `POST /api/profile/`  
+**Description:** Retrieves a user's profile by username.
+
+**Request Body:**
+```json
+{
+    "username": "testuser"
+}
+```
+
+**Response:**
+```json
+{
+    "id": 1,
+    "username": "testuser",
+    "email": "test@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "profile_picture": "base64_encoded_image_data",
+    "profile_picture_content_type": "image/jpeg",
+    "follower_count": 10,
+    "following_count": 5
+}
+```
+
+### 2. Update User Profile
+**Endpoint:** `PATCH /api/profile/`  
+**Description:** Updates the authenticated user's profile.
+
+**Request Body:**
+```json
+{
+    "username": "newusername",
+    "first_name": "John",
+    "last_name": "Doe",
+    "profile_picture": "base64_encoded_image_data",
+    "profile_picture_content_type": "image/jpeg"
+}
+```
+
+**Response:**
+```json
+{
+    "id": 1,
+    "username": "newusername",
+    "email": "test@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "profile_picture": "base64_encoded_image_data",
+    "profile_picture_content_type": "image/jpeg",
+    "follower_count": 10,
+    "following_count": 5
+}
+```
+
+**Notes:**
+- All fields are optional
+- `profile_picture` is stored as binary data in the database and should be sent as a base64 encoded string
+- `profile_picture_content_type` should be the MIME type of the image (e.g., 'image/jpeg', 'image/png')
+- Only the authenticated user can update their own profile
+- The response includes all profile fields, including those that were not updated
+- When receiving the profile data, the `profile_picture` will be returned as a base64 encoded string for JSON compatibility
 
 ## Blog Entry Endpoints
 
@@ -103,7 +170,7 @@ This document provides an overview of all available API endpoints for managing b
 
 Blog entries can have the following visibility levels:
 - **public**: Visible to everyone.
-- **friends**: Visible to the author’s friends.
+- **friends**: Visible to the author's friends.
 - **journal**: Visible only to the author.
 
 ## Notes

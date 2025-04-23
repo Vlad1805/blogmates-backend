@@ -33,5 +33,5 @@ urlpatterns = [
     path('api/unfollow/<int:user_id>/', UnfollowUserAPIView.as_view(), name='unfollow-user'),
     path('api/remove-follower/<int:user_id>/', RemoveFollowerAPIView.as_view(), name='remove-follower'),
     path("api/user/", CurrentUserView.as_view(), name="current-user"),
-    path("api/profile/<int:user_id>/", UserProfileView.as_view(), name="user-profile"),
+    path("api/profile/", UserProfileView.as_view(), name="user-profile"),
 ]

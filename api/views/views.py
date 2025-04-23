@@ -121,33 +121,49 @@ class CurrentUserView(APIView):
 
     def get(self, request):
         user = request.user
-        return Response({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "followers_count": user.followers.count(),
-            "following_count": user.following.count(),
-        })
+        user_profile = get_object_or_404(UserProfile, user__id=user.id)
+        return Response(UserProfileSerializer(user_profile).data)
     
 class UserProfileView(APIView):
+    permission_classes = [AllowAny]  # Allow public access to view profiles
     
-    def get(self, request, user_id, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         """
-        Handle GET request to retrieve the user profile by user_id.
+        Handle POST request to retrieve the user profile by username.
         This is accessible by everyone (public access).
-        """
-        # Retrieve the UserProfile for the given user_id
-        print(f"Fetching profile for user_id: {user_id}")
-        user_profile = get_object_or_404(UserProfile, user__id=user_id)
         
-        # Serialize the profile data
-        serializer = UserProfileSerializer(user_profile)
-        return Response(serializer.data)
+        Args:
+            request: The HTTP request containing the username in the request body
+            
+        Returns:
+            Response: Serialized user profile data or error message
+        """
+        username = request.data.get('username')
+        if not username:
+            return Response(
+                {"error": "Username is required in request body"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Retrieve the UserProfile for the given username
+            user_profile = get_object_or_404(UserProfile, user__username=username)
+            
+            # Serialize the profile data
+            serializer = UserProfileSerializer(user_profile)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {"error": f"Error retrieving user profile: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def patch(self, request, *args, **kwargs):
         """
         Handle PATCH request to update the user profile.
         This is only for the logged-in user (authenticated access).
+        Only allows updating username, first_name, last_name, and profile_picture.
         """
         # Retrieve the logged-in user's profile
         try:
@@ -155,8 +171,22 @@ class UserProfileView(APIView):
         except UserProfile.DoesNotExist:
             return Response({"detail": "User profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Partially update the profile
-        serializer = UserProfileSerializer(user_profile, data=request.data, partial=True)
+        # Filter the request data to only include allowed fields
+        allowed_fields = ['username', 'first_name', 'last_name', 'profile_picture', 'profile_picture_content_type']
+        filtered_data = {k: v for k, v in request.data.items() if k in allowed_fields}
+
+        # Update user fields
+        user = request.user
+        if 'username' in filtered_data:
+            user.username = filtered_data.pop('username')
+        if 'first_name' in filtered_data:
+            user.first_name = filtered_data.pop('first_name')
+        if 'last_name' in filtered_data:
+            user.last_name = filtered_data.pop('last_name')
+        user.save()
+
+        # Update profile fields
+        serializer = UserProfileSerializer(user_profile, data=filtered_data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
