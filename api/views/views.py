@@ -127,6 +127,39 @@ class CurrentUserView(APIView):
 class UserProfileView(APIView):
     permission_classes = [AllowAny]  # Allow public access to view profiles
     
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to retrieve the user profile by ID.
+        This is accessible by everyone (public access).
+        
+        Args:
+            request: The HTTP request
+            user_id: The ID of the user whose profile to retrieve
+            
+        Returns:
+            Response: Serialized user profile data or error message
+        """
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response(
+                {"error": "User ID is required as a query parameter"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Retrieve the UserProfile for the given user ID
+            user_profile = get_object_or_404(UserProfile, user__id=user_id)
+            
+            # Serialize the profile data with request context
+            serializer = UserProfileSerializer(user_profile, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {"error": f"Error retrieving user profile: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to retrieve the user profile by username.
@@ -149,8 +182,8 @@ class UserProfileView(APIView):
             # Retrieve the UserProfile for the given username
             user_profile = get_object_or_404(UserProfile, user__username=username)
             
-            # Serialize the profile data
-            serializer = UserProfileSerializer(user_profile)
+            # Serialize the profile data with request context
+            serializer = UserProfileSerializer(user_profile, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
             
         except Exception as e:

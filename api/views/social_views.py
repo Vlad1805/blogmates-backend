@@ -55,6 +55,22 @@ class PendingFriendRequestsAPIView(APIView):
             for req in pending_requests
         ]
         return Response(data, status=status.HTTP_200_OK)
+    
+class PendingSentFriendRequestsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        pending_requests = request.user.sent_friend_requests
+        data = [
+            {
+                'id': req.id,
+                'receiver_id': req.receiver.id,
+                'receiver_name': req.receiver.username,
+                'created_at': req.created_at
+            }
+            for req in pending_requests
+        ]
+        return Response(data, status=status.HTTP_200_OK)
 
 class AcceptFriendRequestAPIView(APIView):
     permission_classes = [IsAuthenticated]

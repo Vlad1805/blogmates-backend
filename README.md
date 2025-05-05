@@ -36,7 +36,32 @@ This document provides an overview of all available API endpoints for managing b
 
 ## User Profile Endpoints
 
-### 1. Get User Profile
+### 1. Get User Profile by ID
+**Endpoint:** `GET /api/profile/`  
+**Description:** Retrieves a user's profile by their ID.
+
+**Query Parameters:**
+```
+user_id: The ID of the user whose profile to retrieve
+```
+
+**Response:**
+```json
+{
+    "id": 1,
+    "username": "testuser",
+    "email": "test@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "profile_picture": "base64_encoded_image_data",
+    "profile_picture_content_type": "image/jpeg",
+    "follower_count": 10,
+    "following_count": 5,
+    "friendship_status": "following"
+}
+```
+
+### 2. Get User Profile by Username
 **Endpoint:** `POST /api/profile/`  
 **Description:** Retrieves a user's profile by username.
 
@@ -58,7 +83,8 @@ This document provides an overview of all available API endpoints for managing b
     "profile_picture": "base64_encoded_image_data",
     "profile_picture_content_type": "image/jpeg",
     "follower_count": 10,
-    "following_count": 5
+    "following_count": 5,
+    "friendship_status": "following"
 }
 ```
 
@@ -88,7 +114,8 @@ This document provides an overview of all available API endpoints for managing b
     "profile_picture": "base64_encoded_image_data",
     "profile_picture_content_type": "image/jpeg",
     "follower_count": 10,
-    "following_count": 5
+    "following_count": 5,
+    "friendship_status": "following"
 }
 ```
 
@@ -99,6 +126,10 @@ This document provides an overview of all available API endpoints for managing b
 - Only the authenticated user can update their own profile
 - The response includes all profile fields, including those that were not updated
 - When receiving the profile data, the `profile_picture` will be returned as a base64 encoded string for JSON compatibility
+- `friendship_status` can be one of:
+  - `null`: No relationship exists
+  - `"request_sent"`: The logged-in user has sent a friend request
+  - `"following"`: The logged-in user is following this user
 
 ## Blog Entry Endpoints
 
@@ -159,67 +190,4 @@ This document provides an overview of all available API endpoints for managing b
 **Description:** Retrieves all users the authenticated user is following.
 
 ### 3. Unfollow a User
-**Endpoint:** `DELETE /api/unfollow/<user_id>/`  
-**Description:** Unfollows the specified user.
-
-### 4. Remove a Follower
-**Endpoint:** `DELETE /api/remove-follower/<user_id>/`  
-**Description:** Removes the specified user from the list of followers of the authenticated user.
-
-## Visibility Levels for Blog Entries
-
-Blog entries can have the following visibility levels:
-- **public**: Visible to everyone.
-- **friends**: Visible to the author's friends.
-- **journal**: Visible only to the author.
-
-## Notes
-- **Authentication:** All endpoints (except for public blog entries) require JWT-based authentication. Include the token in the `Authorization` header:
-  ```
-  Authorization: Bearer <access_token>
-  ```
-
-## Local Development Guide
-
-### 1. Create and Activate Virtual Environment
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 2. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Start the Development Server
-```bash
-python manage.py runserver
-```
-
-### 4. Create and Apply Migrations
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
-### 5. Create a Superuser (Admin Account)
-```bash
-python manage.py createsuperuser
-```
-
-### 6. Access Django Shell
-```bash
-python manage.py shell
-```
-
-### 7. Check for Installed Apps and Settings
-```bash
-python manage.py check
-```
-
-### 8. Deactivate Virtual Environment
-```bash
-deactivate
-```
-
+**Endpoint:** `DELETE /api/unfollow/<user_id>/`

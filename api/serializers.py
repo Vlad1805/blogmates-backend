@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import BlogEntry, UserProfile
+from .models import BlogEntry, UserProfile, Friendship, FriendRequest
 import base64
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -49,10 +49,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
     # Follower and Following counts (using properties you added to the User model)
     follower_count = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
+    friendship_status = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_picture', 'profile_picture_content_type', 'follower_count', 'following_count']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_picture', 'profile_picture_content_type', 'follower_count', 'following_count', 'friendship_status']
 
     def get_follower_count(self, obj):
         # Use the 'followers' property added to the User model to get the count
@@ -61,6 +62,24 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_following_count(self, obj):
         # Use the 'following' property added to the User model to get the count
         return obj.user.following.count()
+
+    def get_friendship_status(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return None
+        
+        current_user = request.user
+        target_user = obj.user
+
+        # Check if they are friends
+        if Friendship.objects.filter(user=target_user, follower=current_user).exists():
+            return 'following'
+        
+        # Check if there's a pending friend request
+        if FriendRequest.objects.filter(sender=current_user, receiver=target_user, is_accepted=False).exists():
+            return 'request_sent'
+        
+        return None
 
     def to_representation(self, instance):
         """Convert the binary image data to base64 for JSON serialization."""

@@ -4,6 +4,7 @@ from .views.blog_views import BlogEntryAPIView, BlogEntryQueryAPIView
 from .views.social_views import (
     SendFriendRequestAPIView,
     PendingFriendRequestsAPIView,
+    PendingSentFriendRequestsAPIView,
     AcceptFriendRequestAPIView,
     RemoveFriendRequestAPIView,
     GetFollowersAPIView,
@@ -26,6 +27,7 @@ urlpatterns = [
     path('api/blog/<id>/', BlogEntryQueryAPIView.as_view(), name='blog-query'),
     path('api/friend-requests/send/', SendFriendRequestAPIView.as_view(), name='send-friend-request'),
     path('api/friend-requests/pending/', PendingFriendRequestsAPIView.as_view(), name='pending-friend-requests'),
+    path('api/friend-requests/pending/sent/', PendingSentFriendRequestsAPIView.as_view(), name='pending-sent-friend-requests'),
     path('api/friend-requests/accept/<int:request_id>/', AcceptFriendRequestAPIView.as_view(), name='accept-friend-request'),
     path('api/friend-requests/remove/<int:request_id>/', RemoveFriendRequestAPIView.as_view(), name='remove-friend-request'),
     path('api/followers/', GetFollowersAPIView.as_view(), name='get-followers'),
