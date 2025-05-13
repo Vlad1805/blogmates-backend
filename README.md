@@ -57,7 +57,8 @@ user_id: The ID of the user whose profile to retrieve
     "profile_picture_content_type": "image/jpeg",
     "follower_count": 10,
     "following_count": 5,
-    "friendship_status": "following"
+    "friendship_status": "following",
+    "biography": "Hello! I'm a software developer passionate about web technologies."
 }
 ```
 
@@ -84,7 +85,8 @@ user_id: The ID of the user whose profile to retrieve
     "profile_picture_content_type": "image/jpeg",
     "follower_count": 10,
     "following_count": 5,
-    "friendship_status": "following"
+    "friendship_status": "following",
+    "biography": "Hello! I'm a software developer passionate about web technologies."
 }
 ```
 
@@ -99,7 +101,8 @@ user_id: The ID of the user whose profile to retrieve
     "first_name": "John",
     "last_name": "Doe",
     "profile_picture": "base64_encoded_image_data",
-    "profile_picture_content_type": "image/jpeg"
+    "profile_picture_content_type": "image/jpeg",
+    "biography": "Hello! I'm a software developer passionate about web technologies."
 }
 ```
 
@@ -115,7 +118,8 @@ user_id: The ID of the user whose profile to retrieve
     "profile_picture_content_type": "image/jpeg",
     "follower_count": 10,
     "following_count": 5,
-    "friendship_status": "following"
+    "friendship_status": "following",
+    "biography": "Hello! I'm a software developer passionate about web technologies."
 }
 ```
 
@@ -123,6 +127,7 @@ user_id: The ID of the user whose profile to retrieve
 - All fields are optional
 - `profile_picture` is stored as binary data in the database and should be sent as a base64 encoded string
 - `profile_picture_content_type` should be the MIME type of the image (e.g., 'image/jpeg', 'image/png')
+- `biography` is a text field with a maximum length of 500 characters
 - Only the authenticated user can update their own profile
 - The response includes all profile fields, including those that were not updated
 - When receiving the profile data, the `profile_picture` will be returned as a base64 encoded string for JSON compatibility
@@ -133,7 +138,35 @@ user_id: The ID of the user whose profile to retrieve
 
 ## Blog Entry Endpoints
 
-### 1. Add a Blog Entry
+### 1. Get All Visible Blog Entries
+**Endpoint:** `GET /api/blog/visible/`  
+**Description:** Retrieves all blog entries that the user can see based on their authentication status and relationships.
+
+**Response for Authenticated Users:**
+```json
+[
+    {
+        "id": 1,
+        "title": "My Blog Post",
+        "content": "This is my blog post content",
+        "visibility": "public",
+        "author": 1,
+        "author_name": "testuser",
+        "created_at": "2024-03-20T10:00:00Z",
+        "updated_at": "2024-03-20T10:00:00Z"
+    }
+]
+```
+
+**Notes:**
+- For authenticated users, returns:
+  - Their own entries (all visibility levels)
+  - Public entries from others
+  - Friends-only entries from their friends
+- For unauthenticated users, returns only public entries
+- Entries are ordered by newest first
+
+### 2. Add a Blog Entry
 **Endpoint:** `POST /api/blog/`  
 **Description:** Creates a new blog entry for the authenticated user.
 
@@ -146,11 +179,11 @@ user_id: The ID of the user whose profile to retrieve
 }
 ```
 
-### 2. Get User's Blog Entries
+### 3. Get User's Blog Entries
 **Endpoint:** `GET /api/blog/`  
 **Description:** Retrieves all blog entries authored by the authenticated user.
 
-### 3. Get a Specific Blog Entry
+### 4. Get a Specific Blog Entry
 **Endpoint:** `GET /api/blog/<id>/`  
 **Description:** Retrieves the blog entry with the given ID. If `id` is `all`, retrieves all blog entries the user has access to.
 

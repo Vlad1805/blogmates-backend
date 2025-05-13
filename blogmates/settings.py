@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +26,7 @@ SECRET_KEY = 'django-insecure-gnga_w6_=w31sfz*msd(-h)5b9qdxd=-5l$)_zacxdk+7x#s)v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['151.115.15.66', 'localhost', '127.0.0.1', '151.115.15.66.lb.pl-waw.scw.cloud']
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React frontend (dev)
@@ -102,11 +103,11 @@ WSGI_APPLICATION = 'blogmates.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'blogmates',
-        'USER': 'bloguser',
-        'PASSWORD': 'blogpassword',
-        'HOST': '127.0.0.1',  # This should match the service name in docker-compose
-        'PORT': '5432',
+        'NAME': os.environ.get('DB_NAME', 'blogmates'),
+        'USER': os.environ.get('DB_USER', 'bloguser'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'blogpassword'),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 

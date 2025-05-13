@@ -205,7 +205,7 @@ class UserProfileView(APIView):
             return Response({"detail": "User profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
         # Filter the request data to only include allowed fields
-        allowed_fields = ['username', 'first_name', 'last_name', 'profile_picture', 'profile_picture_content_type']
+        allowed_fields = ['username', 'first_name', 'last_name', 'profile_picture', 'profile_picture_content_type', 'biography']
         filtered_data = {k: v for k, v in request.data.items() if k in allowed_fields}
 
         # Update user fields

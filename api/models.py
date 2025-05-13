@@ -8,7 +8,7 @@ class BlogEntry(models.Model):
         ('journal', 'Journal'), # Only the author can see this
     ]
 
-    title = models.CharField(max_length=200, unique=True)  # Title of the blog post
+    title = models.CharField(max_length=200)  # Title of the blog post
     content = models.TextField()  # Large text for the blog content
     author = models.ForeignKey(User, on_delete=models.CASCADE)  # Link to the user who is the author
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')  # Visibility level
@@ -17,6 +17,7 @@ class BlogEntry(models.Model):
 
     class Meta:
         ordering = ['-created_at']  # Order by newest first
+        unique_together = ('title', 'author')  # Make title unique per author
 
     def __str__(self):
         return self.title
@@ -48,6 +49,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     profile_picture = models.BinaryField(blank=True, null=True)
     profile_picture_content_type = models.CharField(max_length=100, blank=True, null=True)
+    biography = models.TextField(blank=True, null=True, max_length=500)  # Optional biography field with max length of 500 characters
 
     def __str__(self):
         return self.user.username

@@ -53,7 +53,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_picture', 'profile_picture_content_type', 'follower_count', 'following_count', 'friendship_status']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_picture', 'profile_picture_content_type', 'follower_count', 'following_count', 'friendship_status', 'biography']
 
     def get_follower_count(self, obj):
         # Use the 'followers' property added to the User model to get the count
