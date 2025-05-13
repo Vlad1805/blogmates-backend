@@ -6,7 +6,7 @@ from rest_framework import status
 from ..serializers import SignupSerializer
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from ..models import BlogEntry, FriendRequest, Friendship, UserProfile
+from ..models import BlogEntry, FriendRequest, Friendship, UserProfile, User
 from ..serializers import BlogEntrySerializer, UserProfileSerializer
 from django.db import models
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -211,7 +211,15 @@ class UserProfileView(APIView):
         # Update user fields
         user = request.user
         if 'username' in filtered_data:
-            user.username = filtered_data.pop('username')
+            new_username = filtered_data['username']
+            # Check if username is already taken by another user
+            if User.objects.filter(username=new_username).exclude(id=user.id).exists():
+                return Response(
+                    {"username": "A user with this username already exists."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            user.username = new_username
+            filtered_data.pop('username')
         if 'first_name' in filtered_data:
             user.first_name = filtered_data.pop('first_name')
         if 'last_name' in filtered_data:

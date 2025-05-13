@@ -24,7 +24,7 @@ class BlogEntryAPIView(ListCreateAPIView):
         serializer.save(author=self.request.user)
 
 class BlogEntryQueryAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # Allow public access to view public posts
 
     def post(self, request):
         """
@@ -88,7 +88,6 @@ class BlogEntryQueryAPIView(APIView):
 
 class VisibleBlogEntriesView(APIView):
     permission_classes = [AllowAny]  # Allow both authenticated and unauthenticated users
-
     def get(self, request):
         """
         Get all blog entries that the user can see.
