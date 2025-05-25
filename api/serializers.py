@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import BlogEntry, UserProfile, Friendship, FriendRequest
+from .models import BlogEntry, UserProfile, Friendship, FriendRequest, BlogComment, BlogLike, CommentLike
 import base64
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -36,6 +36,36 @@ class BlogEntrySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Assign the logged-in user as the author
         validated_data['author'] = self.context['request'].user
+        return super().create(validated_data)
+    
+class BlogCommentSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source='author.username', read_only=True)
+
+    class Meta:
+        model = BlogComment
+        fields = ['id', 'content', 'author', 'author_name', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'author', 'author_name', 'created_at', 'updated_at']
+
+class BlogLikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BlogLike
+        fields = ['id', 'user', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at']
+    
+    def create(self, validated_data):
+        # Assign the logged-in user as the user
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+class CommentLikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CommentLike
+        fields = ['id', 'user', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at']
+    
+    def create(self, validated_data):
+        # Assign the logged-in user as the user
+        validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
 
 class UserProfileSerializer(serializers.ModelSerializer):

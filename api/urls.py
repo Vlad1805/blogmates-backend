@@ -1,6 +1,21 @@
 from django.urls import path
 from .views.views import sanity, SignupAPIView
-from .views.blog_views import BlogEntryAPIView, BlogEntryQueryAPIView, VisibleBlogEntriesView, CreateBlogEntryView
+from .views.blog_views import (
+    BlogEntryAPIView, 
+    BlogEntryQueryAPIView, 
+    VisibleBlogEntriesView, 
+    CreateBlogEntryView,
+    BlogCommentAPIView,
+    GetBlogCommentsView,
+    BlogLikeAPIView,
+    GetBlogLikesView,
+    GetBlogLikeCountView,
+    CommentLikeAPIView,
+    GetCommentLikesView,
+    GetCommentLikeCountView,
+    GetBlogCommentCountView,
+    GetBlogEntryView
+)
 from .views.social_views import (
     SendFriendRequestAPIView,
     PendingFriendRequestsAPIView,
@@ -27,6 +42,17 @@ urlpatterns = [
     path('api/blog/all/', VisibleBlogEntriesView.as_view(), name='visible-blog-entries'),
     path('api/blog/user/', BlogEntryQueryAPIView.as_view(), name='blog-query'),
     path('api/blog/create/', CreateBlogEntryView.as_view(), name='create-blog'),
+    path('api/blog/<int:blog_entry_id>/', GetBlogEntryView.as_view(), name='get-blog'),
+    path('api/blog/comment/<int:blog_entry_id>/', BlogCommentAPIView.as_view(), name='create-comment'),
+    path('api/blog/comment/<int:blog_entry_id>/<int:comment_id>/', BlogCommentAPIView.as_view(), name='delete-comment'),
+    path('api/blog/comments/<int:blog_entry_id>/', GetBlogCommentsView.as_view(), name='get-comments'),
+    path('api/blog/like/<int:blog_entry_id>/', BlogLikeAPIView.as_view(), name='blog-like'),
+    path('api/blog/likes/<int:blog_entry_id>/', GetBlogLikesView.as_view(), name='get-blog-likes'),
+    path('api/blog/like-count/<int:blog_entry_id>/', GetBlogLikeCountView.as_view(), name='get-blog-like-count'),
+    path('api/blog/comment-count/<int:blog_entry_id>/', GetBlogCommentCountView.as_view(), name='get-blog-comment-count'),
+    path('api/comment/like/<int:comment_id>/', CommentLikeAPIView.as_view(), name='comment-like'),
+    path('api/comment/likes/<int:comment_id>/', GetCommentLikesView.as_view(), name='get-comment-likes'),
+    path('api/comment/like-count/<int:comment_id>/', GetCommentLikeCountView.as_view(), name='get-comment-like-count'),
     path('api/friend-requests/send/', SendFriendRequestAPIView.as_view(), name='send-friend-request'),
     path('api/friend-requests/pending/', PendingFriendRequestsAPIView.as_view(), name='pending-friend-requests'),
     path('api/friend-requests/pending/sent/', PendingSentFriendRequestsAPIView.as_view(), name='pending-sent-friend-requests'),
