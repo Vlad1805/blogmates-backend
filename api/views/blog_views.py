@@ -37,6 +37,10 @@ class BlogEntryQueryAPIView(APIView):
         {
             "username": "username_to_query"
         }
+
+        Query Parameters:
+        - page: Page number (default: 1)
+        - page_size: Number of items per page (default: 3, max: 100)
         """
         username = request.data.get('username')
         if not username:
@@ -46,6 +50,10 @@ class BlogEntryQueryAPIView(APIView):
             )
 
         try:
+            # Get pagination parameters
+            page = int(request.query_params.get('page', 1))
+            page_size = min(int(request.query_params.get('page_size', 3)), 100)  # Cap at 100 items per page
+
             # Get the user whose posts we're querying
             target_user = User.objects.get(username=username)
             
@@ -74,8 +82,21 @@ class BlogEntryQueryAPIView(APIView):
             # Order by newest first
             blog_entries = blog_entries.order_by('-created_at')
             
-            serializer = BlogEntrySerializer(blog_entries, many=True)
-            return Response(serializer.data)
+            # Calculate pagination
+            total_count = blog_entries.count()
+            start = (page - 1) * page_size
+            end = start + page_size
+            paginated_entries = blog_entries[start:end]
+
+            serializer = BlogEntrySerializer(paginated_entries, many=True)
+            
+            return Response({
+                'count': total_count,
+                'total_pages': (total_count + page_size - 1) // page_size,
+                'current_page': page,
+                'page_size': page_size,
+                'results': serializer.data
+            })
 
         except User.DoesNotExist:
             return Response(
@@ -101,7 +122,15 @@ class VisibleBlogEntriesView(APIView):
         - Friends-only entries from their friends
         For unauthenticated users:
         - Only public entries
+
+        Query Parameters:
+        - page: Page number (default: 1)
+        - page_size: Number of items per page (default: 10, max: 100)
         """
+        # Get pagination parameters
+        page = int(request.query_params.get('page', 1))
+        page_size = min(int(request.query_params.get('page_size', 10)), 100)  # Cap at 100 items per page
+
         if request.user.is_authenticated:
             # For authenticated users, show:
             # 1. Their own entries (all visibility levels)
@@ -116,8 +145,21 @@ class VisibleBlogEntriesView(APIView):
             # For unauthenticated users, only show public entries
             blog_entries = BlogEntry.objects.filter(visibility='public').order_by('-created_at')
 
-        serializer = BlogEntrySerializer(blog_entries, many=True)
-        return Response(serializer.data)
+        # Calculate pagination
+        total_count = blog_entries.count()
+        start = (page - 1) * page_size
+        end = start + page_size
+        paginated_entries = blog_entries[start:end]
+
+        serializer = BlogEntrySerializer(paginated_entries, many=True)
+        
+        return Response({
+            'count': total_count,
+            'total_pages': (total_count + page_size - 1) // page_size,
+            'current_page': page,
+            'page_size': page_size,
+            'results': serializer.data
+        })
 
 class CreateBlogEntryView(APIView):
     permission_classes = [IsAuthenticated]  # Only authenticated users can create blog entries
@@ -230,44 +272,68 @@ class BlogCommentAPIView(APIView):
             )
 
 class GetBlogCommentsView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # Allow both authenticated and unauthenticated users
+    authentication_classes = [CookieJWTAuthentication]  # Use our custom authentication
 
     def get(self, request, blog_entry_id):
         """
         Get all comments for a specific blog entry.
         
         URL Parameters:
-        - blog_entry_id: ID of the blog entry to get comments for
+        - blog_entry_id: ID of the blog entry
+        
+        Query Parameters:
+        - page: Page number (default: 1)
+        - page_size: Number of items per page (default: 10, max: 100)
         """
         try:
             blog_entry = BlogEntry.objects.get(id=blog_entry_id)
             
-            # Check if user has permission to view comments
+            # Check if user has permission to view the blog entry
             if blog_entry.visibility == 'journal' and request.user != blog_entry.author:
                 return Response(
-                    {"error": "Cannot view comments on private journal entries"},
+                    {"error": "Cannot view private journal entries"},
                     status=status.HTTP_403_FORBIDDEN
                 )
             
-            if blog_entry.visibility == 'friends' and not request.user.is_authenticated:
-                return Response(
-                    {"error": "Must be logged in to view comments on friends-only entries"},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            if blog_entry.visibility == 'friends' and request.user != blog_entry.author:
-                if not Friendship.objects.filter(
-                    user=blog_entry.author,
-                    follower=request.user
-                ).exists():
+            if blog_entry.visibility == 'friends':
+                if not request.user.is_authenticated:
                     return Response(
-                        {"error": "Cannot view comments on friends-only entries unless you are friends with the author"},
+                        {"error": "Must be logged in to view friends-only entries"},
                         status=status.HTTP_403_FORBIDDEN
                     )
+                if request.user != blog_entry.author:
+                    if not Friendship.objects.filter(
+                        user=blog_entry.author,
+                        follower=request.user
+                    ).exists():
+                        return Response(
+                            {"error": "Cannot view friends-only entries unless you are friends with the author"},
+                            status=status.HTTP_403_FORBIDDEN
+                        )
 
+            # Get pagination parameters
+            page = int(request.query_params.get('page', 1))
+            page_size = min(int(request.query_params.get('page_size', 10)), 100)  # Cap at 100 items per page
+
+            # Get comments ordered by newest first
             comments = BlogComment.objects.filter(blog_entry=blog_entry).order_by('-created_at')
-            serializer = BlogCommentSerializer(comments, many=True)
-            return Response(serializer.data)
+            
+            # Calculate pagination
+            total_count = comments.count()
+            start = (page - 1) * page_size
+            end = start + page_size
+            paginated_comments = comments[start:end]
+
+            serializer = BlogCommentSerializer(paginated_comments, many=True)
+            
+            return Response({
+                'count': total_count,
+                'total_pages': (total_count + page_size - 1) // page_size,
+                'current_page': page,
+                'page_size': page_size,
+                'results': serializer.data
+            })
             
         except BlogEntry.DoesNotExist:
             return Response(
