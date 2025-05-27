@@ -52,11 +52,10 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
         'api.authentication.CookieJWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
 }
 
@@ -155,16 +154,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 from datetime import timedelta
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": True,
-    "AUTH_HEADER_TYPES": ("Bearer",),
-    "AUTH_COOKIE": "access_token",  # Name of the cookie for access token
-    "AUTH_COOKIE_REFRESH": "refresh_token",  # Name of the refresh token cookie
-    "AUTH_COOKIE_DOMAIN": None,  # Change this in production
-    "AUTH_COOKIE_SECURE": False,  # Set to True in production (HTTPS required)
-    "AUTH_COOKIE_HTTP_ONLY": True,
-    "AUTH_COOKIE_PATH": "/",
-    "AUTH_COOKIE_SAMESITE": "Lax",
+    'AUTH_COOKIE': 'access_token',  # Cookie name for the access token
+    'AUTH_COOKIE_REFRESH': 'refresh_token',  # Cookie name for the refresh token
+    'AUTH_COOKIE_DOMAIN': None,  # Specify domain in production
+    'AUTH_COOKIE_SECURE': False,  # Set to True in production (HTTPS)
+    'AUTH_COOKIE_HTTP_ONLY': True,  # Prevents JavaScript access to the cookie
+    'AUTH_COOKIE_PATH': '/',  # Cookie path
+    'AUTH_COOKIE_SAMESITE': 'Lax',  # CSRF protection
 }

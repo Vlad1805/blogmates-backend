@@ -11,6 +11,7 @@ from ..serializers import BlogEntrySerializer, BlogCommentSerializer, BlogLikeSe
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
+from ..authentication import CookieJWTAuthentication
 
 class BlogEntryAPIView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]  # Ensure only authenticated users can access
@@ -89,6 +90,8 @@ class BlogEntryQueryAPIView(APIView):
 
 class VisibleBlogEntriesView(APIView):
     permission_classes = [AllowAny]  # Allow both authenticated and unauthenticated users
+    authentication_classes = [CookieJWTAuthentication]  # Use our custom authentication
+
     def get(self, request):
         """
         Get all blog entries that the user can see.
@@ -146,7 +149,7 @@ class CreateBlogEntryView(APIView):
                 {"error": "An error occurred while creating the blog post."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-    
+
 class BlogCommentAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -656,7 +659,8 @@ class GetBlogCommentCountView(APIView):
             )
 
 class GetBlogEntryView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # Allow both authenticated and unauthenticated users
+    authentication_classes = [CookieJWTAuthentication]  # Use our custom authentication
 
     def get(self, request, blog_entry_id):
         """
@@ -675,21 +679,21 @@ class GetBlogEntryView(APIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
             
-            if blog_entry.visibility == 'friends' and not request.user.is_authenticated:
-                return Response(
-                    {"error": "Must be logged in to view friends-only entries"},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            if blog_entry.visibility == 'friends' and request.user != blog_entry.author:
-                if not Friendship.objects.filter(
-                    user=blog_entry.author,
-                    follower=request.user
-                ).exists():
+            if blog_entry.visibility == 'friends':
+                if not request.user.is_authenticated:
                     return Response(
-                        {"error": "Cannot view friends-only entries unless you are friends with the author"},
+                        {"error": "Must be logged in to view friends-only entries"},
                         status=status.HTTP_403_FORBIDDEN
                     )
+                if request.user != blog_entry.author:
+                    if not Friendship.objects.filter(
+                        user=blog_entry.author,
+                        follower=request.user
+                    ).exists():
+                        return Response(
+                            {"error": "Cannot view friends-only entries unless you are friends with the author"},
+                            status=status.HTTP_403_FORBIDDEN
+                        )
 
             serializer = BlogEntrySerializer(blog_entry)
             return Response(serializer.data)
