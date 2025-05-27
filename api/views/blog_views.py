@@ -699,3 +699,31 @@ class GetBlogEntryView(APIView):
                 {"error": "Blog entry not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+    def delete(self, request, blog_entry_id):
+        """
+        Delete a blog entry.
+        
+        URL Parameters:
+        - blog_entry_id: ID of the blog entry to delete
+        
+        Note: Only the author of the blog entry can delete it
+        """
+        try:
+            blog_entry = BlogEntry.objects.get(id=blog_entry_id)
+            
+            # Check if user is the author of the blog entry
+            if request.user != blog_entry.author:
+                return Response(
+                    {"error": "You can only delete your own blog entries"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            blog_entry.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+            
+        except BlogEntry.DoesNotExist:
+            return Response(
+                {"error": "Blog entry not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
