@@ -130,3 +130,68 @@ class UserProfileSerializer(serializers.ModelSerializer):
             ret['profile_picture_content_type'] = data.get('profile_picture_content_type', 'image/jpeg')
         return ret
 
+class SearchUserSerializer(serializers.ModelSerializer):
+    follower_count = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    profile_picture = serializers.SerializerMethodField()
+    profile_picture_content_type = serializers.SerializerMethodField()
+    friendship_status = serializers.SerializerMethodField()
+    biography = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'follower_count', 'following_count', 'profile_picture',
+            'profile_picture_content_type', 'friendship_status', 'biography'
+        ]
+
+    def get_follower_count(self, obj):
+        return Friendship.objects.filter(user=obj).count()
+
+    def get_following_count(self, obj):
+        return Friendship.objects.filter(follower=obj).count()
+
+    def get_profile_picture(self, obj):
+        try:
+            profile = obj.profile
+            if profile.profile_picture:
+                return base64.b64encode(profile.profile_picture).decode('utf-8')
+            return None
+        except UserProfile.DoesNotExist:
+            return None
+
+    def get_profile_picture_content_type(self, obj):
+        try:
+            return obj.profile.profile_picture_content_type
+        except UserProfile.DoesNotExist:
+            return None
+
+    def get_biography(self, obj):
+        try:
+            return obj.profile.biography
+        except UserProfile.DoesNotExist:
+            return None
+
+    def get_friendship_status(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return 'none'
+        
+        if request.user == obj:
+            return 'self'
+            
+        # Check if they are friends
+        if Friendship.objects.filter(user=obj, follower=request.user).exists():
+            return 'following'
+        if Friendship.objects.filter(user=request.user, follower=obj).exists():
+            return 'follower'
+            
+        # Check for pending friend requests
+        if FriendRequest.objects.filter(sender=request.user, receiver=obj, is_accepted=False).exists():
+            return 'request_sent'
+        if FriendRequest.objects.filter(sender=obj, receiver=request.user, is_accepted=False).exists():
+            return 'request_received'
+            
+        return 'none'
+

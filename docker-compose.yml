@@ -1,16 +1,70 @@
+version: '3.8'
+
 services:
-  db:
-    image: postgres:15
-    container_name: blogmates_db
+  web:
+    build: .
+    container_name: blogmates_web
     restart: always
     environment:
-      POSTGRES_DB: blogmates
-      POSTGRES_USER: bloguser
-      POSTGRES_PASSWORD: blogpassword
+      - DEBUG=0
+      - SECRET_KEY=your-secret-key-here
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - SQL_ENGINE=django.db.backends.postgresql
+      - SQL_DATABASE=blogmates
+      - SQL_USER=bloguser
+      - SQL_PASSWORD=blogpassword
+      - SQL_HOST=db
+      - SQL_PORT=5432
+    volumes:
+      - ./logs:/app/logs
+      - ./static:/app/static
+      - ./media:/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - loki
+    user: appuser
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=blogmates
+      - POSTGRES_USER=bloguser
+      - POSTGRES_PASSWORD=blogpassword
     ports:
       - "5432:5432"
+
+  loki:
+    image: grafana/loki:2.9.2
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+
+  fluent-bit:
+    image: fluent/fluent-bit:2.1.0
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./logs:/logs
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./parsers.conf:/fluent-bit/etc/parsers.conf
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:10.2.3
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
 
 volumes:
   postgres_data:
+  grafana_data:

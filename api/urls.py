@@ -14,7 +14,8 @@ from .views.blog_views import (
     GetCommentLikesView,
     GetCommentLikeCountView,
     GetBlogCommentCountView,
-    GetBlogEntryView
+    GetBlogEntryView,
+    SearchView
 )
 from .views.social_views import (
     SendFriendRequestAPIView,
@@ -64,4 +65,5 @@ urlpatterns = [
     path('api/remove-follower/<int:user_id>/', RemoveFollowerAPIView.as_view(), name='remove-follower'),
     path("api/user/", CurrentUserView.as_view(), name="current-user"),
     path("api/profile/", UserProfileView.as_view(), name="user-profile"),
+    path("api/search/", SearchView.as_view(), name="search"),
 ]
