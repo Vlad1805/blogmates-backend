@@ -26,11 +26,12 @@ SECRET_KEY = 'django-insecure-gnga_w6_=w31sfz*msd(-h)5b9qdxd=-5l$)_zacxdk+7x#s)v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['151.115.15.66', 'localhost', '127.0.0.1', '151.115.15.66.lb.pl-waw.scw.cloud']
+ALLOWED_HOSTS = ['151.115.15.66', 'localhost', '127.0.0.1', '151.115.15.66.lb.pl-waw.scw.cloud', 'blogmates-app.com']
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React frontend (dev)
-    "https://yourfrontenddomain.com",  # Production frontend domain, update this latter
+    "https://blogmates-app.com",  # Production frontend domain (HTTPS)
+    "http://blogmates-app.com",  # Production frontend domain (HTTP)
 ]
 
 CORS_ALLOW_CREDENTIALS = True

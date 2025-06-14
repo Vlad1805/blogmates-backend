@@ -1,6 +1,6 @@
 # API Documentation
 
-docker buildx build --platform linux/amd64 -t vladstanciu/blogmates-backend:0.0.6 --push .
+docker buildx build --platform linux/amd64 -t vladstanciu/blogmates-backend:0.1.0 --push .
 
 This document provides an overview of all available API endpoints for managing blog entries, friend requests, followers, and following.
 
