@@ -25,15 +25,12 @@ class SendFriendRequestAPIView(APIView):
         try:
             receiver = User.objects.get(id=receiver_id)
 
-            # Check if the sender is already following the receiver
             if Friendship.objects.filter(user=receiver, follower=request.user).exists():
                 return Response({'error': 'You are already friends with this user.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Check if there is an existing pending friend request
             if FriendRequest.objects.filter(sender=request.user, receiver=receiver, is_accepted=False).exists():
                 return Response({'error': 'Friend request already sent.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Create a new friend request
             FriendRequest.objects.create(sender=request.user, receiver=receiver)
             return Response({'message': 'Friend request sent successfully.'}, status=status.HTTP_201_CREATED)
 
@@ -79,10 +76,8 @@ class AcceptFriendRequestAPIView(APIView):
         try:
             friend_request = FriendRequest.objects.get(id=request_id, receiver=request.user, is_accepted=False)
             
-            # Create an entry in the Friendship table
             Friendship.objects.create(user=request.user, follower=friend_request.sender)
             
-            # Delete the friend request after it has been processed
             friend_request.delete()
 
             return Response({'message': 'Friend request accepted successfully.'}, status=status.HTTP_200_OK)
@@ -95,7 +90,6 @@ class RemoveFriendRequestAPIView(APIView):
 
     def delete(self, request, request_id):
         try:
-            # Combine conditions using Q objects
             friend_request = FriendRequest.objects.get(
                 models.Q(id=request_id) & (models.Q(sender=request.user) | models.Q(receiver=request.user))
             )
@@ -108,7 +102,7 @@ class GetFollowersAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        followers = request.user.followers  # Uses the `followers` property from the User model
+        followers = request.user.followers
         data = [{'id': f.follower.id, 'username': f.follower.username} for f in followers]
         return Response(data, status=status.HTTP_200_OK)
 
@@ -116,7 +110,7 @@ class GetFollowingAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        following = request.user.following  # Uses the `following` property from the User model
+        following = request.user.following
         data = [{'id': f.user.id, 'username': f.user.username} for f in following]
         return Response(data, status=status.HTTP_200_OK)
 
@@ -125,7 +119,6 @@ class UnfollowUserAPIView(APIView):
 
     def delete(self, request, user_id):
         try:
-            # Check if the user is being followed
             followed = User.objects.get(id=user_id)
             print(followed)
             friendship = Friendship.objects.get(user=followed, follower=request.user)
@@ -139,7 +132,6 @@ class RemoveFollowerAPIView(APIView):
 
     def delete(self, request, user_id):
         try:
-            # Check if the user is a follower
             follower = User.objects.get(id=user_id)
             friendship = Friendship.objects.get(user=request.user, follower=follower)
             friendship.delete()

@@ -17,14 +17,13 @@ import logging
 
 logger = logging.getLogger('api')
 
-# Create your views here.
 def sanity(request):
     return HttpResponse("Server is up and running")
 
 class CookieTokenObtainPairView(TokenObtainPairView):
     permission_classes = [AllowAny]
     authentication_classes = []
-    """Custom login view that sets JWT tokens in HTTP-only cookies."""
+    """Login view that sets JWT tokens in HTTP-only cookies."""
     
     def post(self, request, *args, **kwargs):
         logger.info('Login attempt', extra={
@@ -81,7 +80,7 @@ class CookieTokenRefreshView(TokenRefreshView):
             })
             return Response({"error": "No refresh token"}, status=401)
 
-        request.data["refresh"] = refresh_token  # Use cookie token
+        request.data["refresh"] = refresh_token
         response = super().post(request, *args, **kwargs)
 
         if "access" in response.data:
@@ -138,7 +137,7 @@ class SignupAPIView(APIView):
         
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()  # Create the user
+            user = serializer.save()
             logger.info('Signup successful', extra={
                 'user_id': user.id,
                 'username': user.username,

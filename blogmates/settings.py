@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,14 +25,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-gnga_w6_=w31sfz*msd(-h)5b9qdxd=-5l$)_zacxdk+7x#s)v'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['151.115.15.66', 'localhost', '127.0.0.1', '151.115.15.66.lb.pl-waw.scw.cloud', 'blogmates-app.com']
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # React frontend (dev)
-    "https://blogmates-app.com",  # Production frontend domain (HTTPS)
-    "http://blogmates-app.com",  # Production frontend domain (HTTP)
+    "http://localhost:5173",
+    "https://blogmates-app.com",
+    "http://blogmates-app.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -194,13 +195,21 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-from datetime import timedelta
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
+    USE_X_FORWARDED_PORT = True
+
 SIMPLE_JWT = {
-    'AUTH_COOKIE': 'access_token',  # Cookie name for the access token
-    'AUTH_COOKIE_REFRESH': 'refresh_token',  # Cookie name for the refresh token
-    'AUTH_COOKIE_DOMAIN': None,  # Specify domain in production
-    'AUTH_COOKIE_SECURE': False,  # Set to True in production (HTTPS)
-    'AUTH_COOKIE_HTTP_ONLY': True,  # Prevents JavaScript access to the cookie
-    'AUTH_COOKIE_PATH': '/',  # Cookie path
-    'AUTH_COOKIE_SAMESITE': 'Lax',  # CSRF protection
+    'AUTH_COOKIE': 'access_token',
+    'AUTH_COOKIE_REFRESH': 'refresh_token',
+    'AUTH_COOKIE_DOMAIN': None if DEBUG else "blogmates-app.com",
+    'AUTH_COOKIE_SECURE': not DEBUG,
+    'AUTH_COOKIE_HTTP_ONLY': True,
+    'AUTH_COOKIE_PATH': '/',
+    'AUTH_COOKIE_SAMESITE': 'Lax',    
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
 }

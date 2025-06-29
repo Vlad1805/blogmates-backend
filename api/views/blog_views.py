@@ -17,15 +17,13 @@ import logging
 logger = logging.getLogger('api')
 
 class BlogEntryAPIView(ListCreateAPIView):
-    permission_classes = [IsAuthenticated]  # Ensure only authenticated users can access
+    permission_classes = [IsAuthenticated]
     serializer_class = BlogEntrySerializer
 
     def get_queryset(self):
-        # Retrieve blog entries belonging to the logged-in user
         return BlogEntry.objects.filter(author=self.request.user)
 
     def perform_create(self, serializer):
-        # Automatically set the logged-in user as the author
         serializer.save(author=self.request.user)
 
 class BlogEntryQueryAPIView(APIView):
@@ -57,32 +55,22 @@ class BlogEntryQueryAPIView(APIView):
             page = int(request.query_params.get('page', 1))
             page_size = min(int(request.query_params.get('page_size', 3)), 100)  # Cap at 100 items per page
 
-            # Get the user whose posts we're querying
             target_user = User.objects.get(username=username)
             
-            # Base queryset for the target user's posts
             blog_entries = BlogEntry.objects.filter(author=target_user)
 
             # Filter based on visibility and authentication
             if request.user.is_authenticated:
-                # For authenticated users, show:
-                # 1. All their own posts
-                # 2. Public posts from others
-                # 3. Friends-only posts if they are friends
                 if request.user == target_user:
-                    # User viewing their own posts - show all
                     pass
                 else:
-                    # User viewing someone else's posts
                     blog_entries = blog_entries.filter(
                         models.Q(visibility='public') |
                         models.Q(visibility='friends', author__friendships__follower=request.user)
                     )
             else:
-                # For unauthenticated users, only show public posts
                 blog_entries = blog_entries.filter(visibility='public')
 
-            # Order by newest first
             blog_entries = blog_entries.order_by('-created_at')
             
             # Calculate pagination
@@ -114,38 +102,22 @@ class BlogEntryQueryAPIView(APIView):
 
 class VisibleBlogEntriesView(APIView):
     permission_classes = [AllowAny]  # Allow both authenticated and unauthenticated users
-    authentication_classes = [CookieJWTAuthentication]  # Use our custom authentication
+    authentication_classes = [CookieJWTAuthentication]
 
     def get(self, request):
-        """
-        Get all blog entries that the user can see.
-        For authenticated users:
-        - Their own entries (all visibility levels)
-        - Public entries from others
-        - Friends-only entries from their friends
-        For unauthenticated users:
-        - Only public entries
-
-        Query Parameters:
-        - page: Page number (default: 1)
-        - page_size: Number of items per page (default: 10, max: 100)
-        """
         # Get pagination parameters
         page = int(request.query_params.get('page', 1))
-        page_size = min(int(request.query_params.get('page_size', 10)), 100)  # Cap at 100 items per page
+        page_size = min(int(request.query_params.get('page_size', 10)), 100)
 
         if request.user.is_authenticated:
-            # For authenticated users, show:
-            # 1. Their own entries (all visibility levels)
-            # 2. Public entries from others
-            # 3. Friends-only entries from their friends
+            # For authenticated users
             blog_entries = BlogEntry.objects.filter(
-                models.Q(author=request.user) |  # User's own entries
+                models.Q(author=request.user) |  # Own entries
                 models.Q(visibility='public') |  # Public entries
-                models.Q(visibility='friends', author__friendships__follower=request.user)  # Friends' entries
-            ).distinct().order_by('-created_at')  # Order by newest first
+                models.Q(visibility='friends', author__friendships__follower=request.user)  # Friend's entries
+            ).distinct().order_by('-created_at')
         else:
-            # For unauthenticated users, only show public entries
+            # For unauthenticated users
             blog_entries = BlogEntry.objects.filter(visibility='public').order_by('-created_at')
 
         # Calculate pagination
@@ -1100,8 +1072,6 @@ class GetBlogEntryView(APIView):
         
         URL Parameters:
         - blog_entry_id: ID of the blog entry to delete
-        
-        Note: Only the author of the blog entry can delete it
         """
         try:
             logger.info('Blog entry deletion initiated', extra={
@@ -1199,20 +1169,14 @@ class SearchView(APIView):
 
             # Filter blog entries based on visibility and authentication
             if request.user.is_authenticated:
-                # For authenticated users, show:
-                # 1. Their own entries (all visibility levels)
-                # 2. Public entries from others
-                # 3. Friends-only entries from their friends
                 blog_entries = blog_entries.filter(
-                    models.Q(author=request.user) |  # User's own entries
-                    models.Q(visibility='public') |  # Public entries
-                    models.Q(visibility='friends', author__friendships__follower=request.user)  # Friends' entries
+                    models.Q(author=request.user) |
+                    models.Q(visibility='public') |
+                    models.Q(visibility='friends', author__friendships__follower=request.user)
                 ).distinct()
             else:
-                # For unauthenticated users, only show public entries
                 blog_entries = blog_entries.filter(visibility='public')
 
-            # Order results
             users = users.order_by('username')
             blog_entries = blog_entries.order_by('-created_at')
 

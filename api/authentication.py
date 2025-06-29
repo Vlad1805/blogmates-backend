@@ -8,22 +8,19 @@ from django.utils.translation import gettext_lazy as _
 
 class CookieJWTAuthentication(BaseAuthentication):
     def authenticate(self, request):
-        # Get the JWT token from the cookie
+        # Extract JWT token from cookies
         jwt_token = request.COOKIES.get(settings.SIMPLE_JWT['AUTH_COOKIE'])
         
         if not jwt_token:
-            # Return None to indicate no authentication was attempted
-            # This allows the view to handle unauthenticated access
+            # Allow unauthenticated user access
             return None
             
         try:
-            # Validate the token
+            # If token exists, return the user and the token
             validated_token = AccessToken(jwt_token)
-            # Get the user ID from the token
             user_id = validated_token.get('user_id')
             if user_id is None:
                 return None
-            # Get the actual User object
             user = User.objects.get(id=user_id)
             return (user, validated_token)
         except Exception as e:
